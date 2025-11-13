@@ -1,0 +1,21 @@
+
+My original data from the dataframe of patient_vitals was in naive datetime. 
+I localized the data using tz_localize('UTC') in order to add the timezone of UTC to the naive datetime in patient_vitals. 
+I then converted the timezone in patient_vitals from 'UTC' to 'US/Eastern'. 
+An issue that I encountered with DST is that when we try to convert to the timezone of US/Eastern, issues can arise due to daylight savings 
+that happens with US/Eastern time. On the second Sunday of March every year, clocks skip one hour and go directly from 2:00 a.m. to
+3 a.m. This means that 2:30 a.m. on this day is an invalid time, and this can cause ambiguity if we're trying to convert to US/Eastern time, but
+the given time on the second Sunday of March we're trying to convert does not exist in US/Eastern time due to DST. Similarly, on the first Sunday every November, at 2 a.m. 
+clocks move back one hour to 1 a.m. If we're tying to convert a time on the first Sunday of November to US/Eastern time, ambiguity can arise due to the 
+repeated hour. Using UTC as the base timezone avoids these issues with DST because UTC doesn't observe DST, which means we have an unambiguous reference point. 
+This means that pandas will be able to correctly calculate the local time for the new timezone and properly adjust for DST changes without ambiguity. 
+
+Example: 
+We have 
+dst_date_utc = pd.Timestamp('2023-03-12 10:00:00', tz='UTC')  # UTC time avoids DST issues
+print(dst_date_utc)
+dst_time_eastern = dst_date_utc.tz_convert('US/Eastern')  # Convert UTC to Eastern
+print(dst_time_eastern)
+
+When we convert '2023-03-12 10:00:00' in UTC to US/Eastern, we get '2023-03-12 06:00:00-04:00'. We see that pandas takes into account that an hour is skipped 
+on the Sunday of March for US/Eastern, causing US/Eastern to to trail UTC by 4 hours as part of DST.
